@@ -1,0 +1,7 @@
+---
+title: "Effect Transmissions to Fuel Efficiency (MPG)"
+author: "Andreas Hadimulyono"
+date: "Saturday, October 10, 2015"
+output: pdf_document
+---
+
