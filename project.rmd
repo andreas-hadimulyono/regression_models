@@ -5,3 +5,9 @@ date: "Saturday, October 10, 2015"
 output: pdf_document
 ---
 
+## Overview
+
+This analysis aims to answer two questions in particular:
+
+1. Is an automatic or manual transmission better for MPG?
+2. What is the MPG difference (if any) between manual and automatic transmission?
