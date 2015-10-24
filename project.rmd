@@ -1,13 +1,109 @@
 ---
-title: "Effect of Transmissions to Fuel Efficiency (MPG)"
+title: "Effect of Mode of Transmissions to Fuel Efficiency (MPG)"
 author: "Andreas Hadimulyono"
-date: "Saturday, October 10, 2015"
 output: pdf_document
 ---
 
-## Overview
+``` {r libraries, echo=FALSE, warning=FALSE}
+library(datasets)
+library(ggplot2)
+library(car)
+```
+
+## Executive Summary
 
 This analysis aims to answer two questions in particular:
 
 1. Is an automatic or manual transmission better for MPG?
 2. What is the MPG difference (if any) between manual and automatic transmission?
+
+The analysis starts with some exploratory data analysis, followed by model selection and interpretations. Finally it attempts to try to answer the posed questions above.
+
+## Exploratory Data Analysis
+
+The dataset contains 32 observations of 11 variables. Variables like vs, am, and cyl are distinct values, so we can convert them to factors so ggplot can handle them better. There seems to be a distinct difference in mpg distributions between automatic and manual transmissions as shown in Figure 1 (Appendix).
+
+``` {r explorations, echo=FALSE}
+mtcars$am <- factor(mtcars$am, labels=c("Automatic", "Manual"))
+mtcars$cyl <- as.factor(mtcars$cyl)
+mtcars$vs <- factor(mtcars$vs, labels=c("V Engine", "S Engine"))
+```
+
+## Model Selection and Interpretations
+
+We will consider our model by starting with a variable (our variable of interest, "am"), and we will add variable using nested model technique. After variables are added, we run ANOVA function to test if the variable should be added.
+
+``` {r fits, echo=FALSE}
+fit1 <- lm(mpg ~ am, mtcars)
+fit2 <- lm(mpg ~ am + wt, mtcars)
+fit3 <- lm(mpg ~ am + wt + hp, mtcars)
+fit4 <- lm(mpg ~ am + wt + hp + cyl, mtcars)
+```
+
+``` {r anova, echo=FALSE}
+anova(fit1, fit2, fit3, fit4)
+```
+
+1. First variable to be added is weight (wt). Which should make sense. As a car gets heavier, it should take more fuel to travel the same distance, thus it should mean worse MPG. Anova gives us p-value of 3.32e-09, so we should take this variable.
+2. Next is horsepower (hp). With higher potential power output, it should potentially require more fuel, which should result in worse MPG. Running anova on (wt and hp) gives a p-value of 0.0003525, so we're accepting this variable.
+3. Next to be added is number of cylinders, which impacts how fast power can be generated in a car, so it should have an effect to MPG. Running anova on (wt, hp, and cyl) though gives us a p-value of 0.0999982, which is over 0.05 and that means it seems we do not need to add number of cylinders to the previous models. A possible explanation is number of cylinders is related to power, and the variation caused by this variable could have been explained by previous variable (horsepower)
+
+As the author is not well-versed in the making of a car and the limited literature research performed has indicated that other variables are likely to also be correlated to the power of the engine, the author decides to not add any more variable. So we will use the model specified in point (2) above, which uses "am", "wt", and "hp" as predictors.
+
+The coefficients of the selected model is as follows:
+
+``` {r selectedModelCoeff, echo=FALSE}
+s <- summary(fit3)$coeff
+s
+```
+
+The base of reference for this model is am = "Automatic", which is a factor, so the intercept is the predicted MPG with automatic transmission, and other variables are not present (zero). The coefficients for non-factor variables (wt and hp) represents the change in MPG for each unit of change in (wt and hp) respectively, while holding other variables constants. The coefficients for amManual represents the change in MPG if the mode of transmission change to Manual from Automatic, while holding other variables constant.
+
+Figure 2 shows the two fitted lines for Automatic and Manual against values of weight while holding horsepower at its mean.
+
+Figure 3 (Appendix) shows the residuals of the data for the 32 observations in the data set. There does not seem to be any clear pattern to suggest abnormality (e.g. heteroskesdacity).
+
+Figure 4 (Appendix) shows QQ Plot of the residuals. It does not seem to have obvious abnormality.
+
+## Conclusion
+
+The coefficients for amManual, which represent the change in MPG by changing mode of transmission from automatic to manual, is positive 2.083710. That means manual transmission seems to result in more MPG (which means more efficient cars).
+
+However while the model used looks like a good fit, the p-value of the coefficient of is 0.141268, which is outside typical 5% threshold we set for p-values. That means we are unable to reject the null hypothesis. So while the coefficient is non-zero, it is unlikely that the mode of transmission has an impact on the MPG. Thus this analysis is unable to answer the questions posed in the executive summary based on the data provided and model selected.
+
+
+\newpage
+
+# Appendix
+
+``` {r amFactorPlot, echo=FALSE, fig.height=3}
+g <- ggplot(mtcars, aes(x = as.factor(am), y = mpg))
+g <- g + geom_boxplot()
+g <- g + ylab("MPG") + xlab("Mode of Transmission") + ggtitle("Figure 1. Comparison of Mode of Transmission Effect on MPG \n(Red Point Represents the Mean)")
+g <- g + stat_summary(fun.y=mean, geom="point", shape=5, size=4, colour="red")
+g
+```
+
+``` {r fittedLines}
+horsepowerMean <- mean(mtcars$hp)
+automaticIntercept <- s$coeff[1,1]
+manualIntercept <- s$coeff[1,1] + s$coeff[2,1]
+predictedY <- 
+```
+
+``` {r residualPlot, echo=FALSE}
+residualDF <- data.frame(y = resid(fit3), x = predict(fit3))
+g2 = ggplot(residualDF, aes(y = y, x = x))
+g2 <- g2 + geom_point()
+g2 <- g2 + xlab("Predict(fit3)") + ylab("Residual")+ ggtitle("Figure 3. Residual Plot")
+g2 <- g2 + geom_abline(intercept = 0, slope = 0)
+g2
+
+```
+
+``` {r qqPlot, echo=FALSE}
+qqPlot(fit3, main="Figure 4. QQ Plot")
+
+```
+
+
