@@ -21,7 +21,7 @@ The analysis starts with some exploratory data analysis, followed by model selec
 
 ## Exploratory Data Analysis
 
-The dataset contains 32 observations of 11 variables. Variables like vs, am, and cyl are distinct values, so we can convert them to factors so ggplot can handle them better. There seems to be a distinct difference in mpg distributions between automatic and manual transmissions as shown in Figure 1 (Appendix).
+The dataset contains 32 observations of 11 variables. There seems to be a distinct difference in mpg distributions between automatic and manual transmissions as shown in Figure 1 (Appendix).
 
 The table below shows the correlations of each variable in mtcars dataset.
 
@@ -29,15 +29,9 @@ The table below shows the correlations of each variable in mtcars dataset.
 cor(mtcars)
 ```
 
-``` {r explorations, echo=FALSE}
-mtcars$am <- factor(mtcars$am, labels=c("Automatic", "Manual"))
-mtcars$cyl <- as.factor(mtcars$cyl)
-mtcars$vs <- factor(mtcars$vs, labels=c("V Engine", "S Engine"))
-```
-
 ## Model Selection and Interpretations
 
-We will consider our model by starting with a variable (our variable of interest, "am"), and we will add variables having |correlation with mpg| greater than 0.8 using nested model technique. After variables are added, we run ANOVA function to test if the variable should be added.
+We will consider our model by starting with a variable (our variable of interest, "am") as [fit1], and we will add variables having |correlation with mpg| greater than 0.8 using nested model technique. After variables are added, we run ANOVA function to test if the variable should be added.
 
 ``` {r fits, echo=FALSE}
 fit1 <- lm(mpg ~ am, mtcars)
@@ -62,24 +56,24 @@ s <- summary(fit3)$coeff
 s
 ```
 
-The base of reference for this model is am = "Automatic", which is a factor, so the intercept is the predicted MPG for automatic transmission, while other variables are not present (zero for continuous variable, or in case of factor, the reference, which is 4 cylinders for cylinder variable). The coefficients for wt represents the change in MPG for each unit of change in wt, while holding other variables constants. The coefficients for amManual represents the change in MPG if the mode of transmission change to Manual from Automatic, while holding other variables constant.
+For am, 0 represents automatic and 1 represents manual. The intercept is the predicted MPG value when all predictors are not present. The am coefficient means the expected change in MPG for each change in am, while holding other variables constants. The coefficients for wt represents the change in MPG for each unit of change in wt, while holding other variables constants. The same for cyl, the coefficient means the expected change to MPG for each unit of change in cylinder, holding other variables constant.
 
-Figure 3 (Appendix) shows the residuals of the data for the 32 observations in the data set. There does not seem to be any clear pattern to suggest abnormality (e.g. heteroskesdacity).
+Figure 2 (Appendix) shows the residual plot of the data for the 32 observations in the data set. There does not seem to be any clear pattern to suggest abnormality (e.g. heteroskesdacity).
 
-Figure 4 (Appendix) shows QQ Plot of the residuals. It does not seem to have obvious abnormality.
+Figure 3 (Appendix) shows QQ Plot of the residuals. It does not seem to have obvious abnormality.
 
 ## Conclusion
 
-The coefficients for amManual, which represent the change in MPG by changing mode of transmission from automatic to manual, is positive 0.1501031. That means manual transmission seems to result in more MPG (which means more efficient cars).
+The coefficients for am is positive, which represent positive change in MPG by changing mode of transmission from automatic to manual by 0.1764932. That means manual transmission seems to result in more MPG (which means more efficient cars).
 
-However while the coefficient is non-zero, the p-value of the coefficient is 9.089474e-01, which is outside typical 5% threshold we set for p-values. As we are unable to reject the null hypothesis, that means it is unlikely that the mode of transmission has an impact on the MPG. Thus this analysis is unable to answer the questions posed in the executive summary based on the data provided and model selected.
+However while the coefficient is non-zero, the p-value of the coefficient is 8.933421e-01, which is outside typical 5% threshold we set for p-values. As we are unable to reject the null hypothesis, that means this observation is not statistically significant. Thus this analysis is unable to answer the questions posed in the executive summary based on the data provided and model selected.
 
 
 \newpage
 
 # Appendix
 
-``` {r amFactorPlot, echo=FALSE, fig.height=3}
+``` {r amFactorPlot, echo=FALSE, fig.height=3, warning=FALSE}
 g <- ggplot(mtcars, aes(x = as.factor(am), y = mpg))
 g <- g + geom_boxplot()
 g <- g + ylab("MPG") + xlab("Mode of Transmission") + ggtitle("Figure 1. Comparison of Mode of Transmission Effect on MPG \n(Red Point Represents the Mean)")
@@ -88,18 +82,18 @@ g
 ```
 
 
-``` {r residualPlot, echo=FALSE}
+``` {r residualPlot, echo=FALSE, warning=FALSE}
 residualDF <- data.frame(y = resid(fit3), x = predict(fit3))
 g2 = ggplot(residualDF, aes(y = y, x = x))
 g2 <- g2 + geom_point()
-g2 <- g2 + xlab("Predict(fit3)") + ylab("Residual")+ ggtitle("Figure 3. Residual Plot")
+g2 <- g2 + xlab("Predict(fit3)") + ylab("Residual")+ ggtitle("Figure 2. Residual Plot")
 g2 <- g2 + geom_abline(intercept = 0, slope = 0)
 g2
 
 ```
 
-``` {r qqPlot, echo=FALSE}
-qqPlot(fit3, main="Figure 4. QQ Plot")
+``` {r qqPlot, echo=FALSE, warning=FALSE}
+qqPlot(fit3, main="Figure 3. QQ Plot")
 
 ```
 
